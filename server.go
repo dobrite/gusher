@@ -9,44 +9,55 @@ import (
 	"os"
 )
 
-var chat pubsub.Publisher
+type Channel struct {
+	pubsub.Publisher
+}
+
+var Channels map[string]*Channel
 
 func main() {
-	http.Handle("/echo/", sockjs.NewHandler("/echo", sockjs.DefaultOptions, echoHandler))
+	Channels = make(map[string]*Channel)
+	Channels["default"] = new(Channel)
+	http.Handle("/gusher/", sockjs.NewHandler("/gusher", sockjs.DefaultOptions, gusherHandler))
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	http.HandleFunc("/", Index)
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3001"
+		port = "3000"
 	}
 
 	log.Println("Server started")
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
-func echoHandler(session sockjs.Session) {
-	log.Println("Client connected")
-	closedSession := make(chan struct{})
-	chat.Publish("[info] chatter joined")
-	defer chat.Publish("[info] chatter left")
-	go func() {
-		reader, _ := chat.SubChannel(nil)
-		for {
-			select {
-			case <-closedSession:
+func subscribe(session sockjs.Session, closedSession chan struct{}) {
+	reader, _ := Channels["default"].SubChannel(nil)
+	for {
+		select {
+		case <-closedSession:
+			log.Println("subscribe closed")
+			return
+		case message := <-reader:
+			msg := message.(string)
+			log.Println("Msg sent: " + msg)
+			if err := session.Send(msg); err != nil {
 				return
-			case msg := <-reader:
-				if err := session.Send(msg.(string)); err != nil {
-					return
-				}
 			}
 		}
-	}()
+	}
+}
+
+func gusherHandler(session sockjs.Session) {
+	log.Println("Client connected")
+	//chat.Publish("[info] chatter joined")
+	//defer chat.Publish("[info] chatter left")
+	closedSession := make(chan struct{})
+	go subscribe(session, closedSession)
 	for {
-		if msg, err := session.Recv(); err == nil {
-			log.Println("Msg rec'd: " + msg)
-			chat.Publish(msg)
+		if raw, err := session.Recv(); err == nil {
+			log.Println("Msg rec'd: " + raw)
+			Channels["default"].Publish(raw)
 			continue
 		}
 		log.Println("Client disconnected")
@@ -57,6 +68,7 @@ func echoHandler(session sockjs.Session) {
 }
 
 func Index(w http.ResponseWriter, req *http.Request) {
+	log.Println(req.URL.Path)
 	if req.URL.Path != "/" {
 		http.NotFound(w, req)
 		return
