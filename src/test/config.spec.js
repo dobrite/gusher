@@ -2,11 +2,11 @@ describe('config', function () {
 
   var config;
 
-  beforeEach(function (done) {
-    config = require('config');
+  beforeEach(function () {
+    config = require('../javascripts/config');
   });
 
-  afterEach(function (done) {
+  afterEach(function () {
   });
 
   context('given when NODE_ENV is development', function () {
@@ -15,7 +15,11 @@ describe('config', function () {
     });
 
     it('constructs port according to env', function () {
-      expect(config.url).to.equal(3000);
+      expect(config.port).to.equal(3000);
+    });
+
+    it('constructs fqd according to env', function () {
+      expect(config.fqd).to.equal('http://localhost:3000/gusher/');
     });
 
   });
