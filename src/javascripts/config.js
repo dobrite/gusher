@@ -1,13 +1,14 @@
 var process = require('process');
 
-var dev = process.env.NODE_ENV !== "production";
+var dev    = process.env.NODE_ENV !== "production",
+    scheme = 'http',
+    url    = (dev) ? "localhost" : "example.com",
+    port   = (dev) ? 3000 : 80,
+    fqd    = scheme + "://" + url + ":" + port.toString();
 
-var config = {
-  url:  (dev) ? "localhost" : "example.com",
-  port: (dev) ? 3000 : 80,
-  fqd: function () {
-    return "http://" + this.url + ":" + this.port.toString() + "/gusher/";
-  }()
+module.exports = {
+  scheme: scheme,
+  url: url,
+  port: port,
+  fqd: fqd
 };
-
-module.exports = config;

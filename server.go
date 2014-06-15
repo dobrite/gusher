@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/igm/pubsub"
 	"github.com/igm/sockjs-go/sockjs"
 	"io/ioutil"
@@ -17,9 +18,10 @@ var Channels map[string]*Channel
 
 func main() {
 	Channels = make(map[string]*Channel)
-	Channels["default"] = new(Channel)
+	Channels["test-channel"] = new(Channel)
 	http.Handle("/gusher/", sockjs.NewHandler("/gusher", sockjs.DefaultOptions, gusherHandler))
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
+	http.HandleFunc("/post/", Post)
 	http.HandleFunc("/", Index)
 
 	port := os.Getenv("PORT")
@@ -32,7 +34,7 @@ func main() {
 }
 
 func subscribe(session sockjs.Session, closedSession chan struct{}) {
-	reader, _ := Channels["default"].SubChannel(nil)
+	reader, _ := Channels["test-channel"].SubChannel(nil)
 	for {
 		select {
 		case <-closedSession:
@@ -57,7 +59,7 @@ func gusherHandler(session sockjs.Session) {
 	for {
 		if raw, err := session.Recv(); err == nil {
 			log.Println("Msg rec'd: " + raw)
-			Channels["default"].Publish(raw)
+			Channels["test-channel"].Publish(raw)
 			continue
 		}
 		log.Println("Client disconnected")
@@ -65,6 +67,24 @@ func gusherHandler(session sockjs.Session) {
 	}
 	close(closedSession)
 	log.Println("Session closed")
+}
+
+type Message struct {
+	Channel string `json:"channel"`
+	Event   string `json:"event"`
+	Data    string `json:"data"`
+}
+
+func Post(w http.ResponseWriter, req *http.Request) {
+	if req.Method != "POST" {
+		return
+	}
+	channel := req.PostFormValue("channel")
+	event := req.PostFormValue("event")
+	data := req.PostFormValue("data")
+	m := Message{channel, event, data}
+	payload, _ := json.Marshal(m)
+	Channels[channel].Publish(string(payload))
 }
 
 func Index(w http.ResponseWriter, req *http.Request) {

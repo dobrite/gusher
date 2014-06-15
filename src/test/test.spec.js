@@ -1,43 +1,46 @@
+var Gusher = require('../javascripts/gusher'),
+    post   = require('../javascripts/utils').post;
+
 describe('A test suite', function () {
 
-  var sock1, sock2;
+  var client_1, client_2;
 
   beforeEach(function (done) {
-    sock1 = new SockJS('http://localhost:3000/gusher/');
-    sock1.onopen = function () {
-      sock2 = new SockJS('http://localhost:3000/gusher/');
-      sock2.onopen = function () {
+    client_1 = new Gusher();
+    client_1.connection.bind('connected', function () {
+      client_2 = new Gusher();
+      client_2.connection.bind('connected', function () {
         done();
-      };
-    };
+      });
+    });
   });
 
   afterEach(function (done) {
-    sock1.onclose = function () {
-      sock2.onclose = function () {
+    client_1.connection.bind('disconnected', function () {
+      client_2.connection.bind('disconnected', function () {
         done();
-      };
-      sock2.close();
-    };
-    sock1.close();
+      });
+      client_2.disconnect();
+    });
+    client_1.disconnect();
   });
 
   it('echos the message', function (done) {
-    sock1.onmessage = function (data) {
-      expect(data.type).to.be.equal('message');
-      expect(data.data).to.be.equal('yo!');
+    var channel = client_1.subscribe('test-channel');
+    channel.bind('test-event', function (data) {
+      expect(data.message).to.be.equal('yo!');
       done();
-    };
-    sock1.send('yo!');
+    });
+    post('test-channel', 'test-event', { message: "yo!" });
   });
 
   it('publishes the message to others', function (done) {
-    sock2.onmessage = function (data) {
-      expect(data.type).to.be.equal('message');
-      expect(data.data).to.be.equal('yo!');
+    var channel = client_2.subscribe('test-channel');
+    channel.bind('test-event', function (data) {
+      expect(data.message).to.be.equal('yo!');
       done();
-    };
-    sock1.send('yo!');
+    });
+    post('test-channel', 'test-event', { message: "yo!" });
   });
 
 });

@@ -6,10 +6,11 @@ describe('config', function () {
     config = require('../javascripts/config');
   });
 
-  afterEach(function () {
-  });
-
   context('given when NODE_ENV is development', function () {
+    it('defines scheme', function () {
+      expect(config.scheme).to.equal('http');
+    });
+
     it('constructs url according to env', function () {
       expect(config.url).to.equal('localhost');
     });
@@ -19,7 +20,7 @@ describe('config', function () {
     });
 
     it('constructs fqd according to env', function () {
-      expect(config.fqd).to.equal('http://localhost:3000/gusher/');
+      expect(config.fqd).to.equal('http://localhost:3000');
     });
 
   });
