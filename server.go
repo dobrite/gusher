@@ -21,7 +21,7 @@ func main() {
 	Channels["test-channel"] = new(Channel)
 	http.Handle("/gusher/", sockjs.NewHandler("/gusher", sockjs.DefaultOptions, gusherHandler))
 	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
-	http.HandleFunc("/post/", Post)
+	http.HandleFunc("/api/", API)
 	http.HandleFunc("/", Index)
 
 	port := os.Getenv("PORT")
@@ -75,7 +75,7 @@ type Message struct {
 	Data    string `json:"data"`
 }
 
-func Post(w http.ResponseWriter, req *http.Request) {
+func API(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
 		return
 	}

@@ -10,11 +10,12 @@ var PostData = function (channel, event, data) {
 
 var post = function (channel, event, data) {
   var request = new XMLHttpRequest();
-  request.open('POST', config.fqd + '/post/', true);
+  request.open('POST', config.fqd + '/api/', true);
   request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
   request.send(querystring.stringify(new PostData(channel, event, data)));
 };
 
-module.exports = {
-  post: post
-};
+var API = {};
+API.post = post;
+
+module.exports = API;

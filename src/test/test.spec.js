@@ -1,5 +1,5 @@
 var Gusher = require('../javascripts/gusher'),
-    post   = require('../javascripts/utils').post;
+    API    = require('../javascripts/utils');
 
 describe('A test suite', function () {
 
@@ -31,7 +31,7 @@ describe('A test suite', function () {
       expect(data.message).to.be.equal('yo!');
       done();
     });
-    post('test-channel', 'test-event', { message: "yo!" });
+    API.post('test-channel', 'test-event', { message: "yo!" });
   });
 
   it('publishes the message to others', function (done) {
@@ -40,7 +40,7 @@ describe('A test suite', function () {
       expect(data.message).to.be.equal('yo!');
       done();
     });
-    post('test-channel', 'test-event', { message: "yo!" });
+    API.post('test-channel', 'test-event', { message: "yo!" });
   });
 
 });
