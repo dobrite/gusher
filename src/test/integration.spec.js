@@ -1,7 +1,7 @@
 var Gusher = require('../javascripts/gusher'),
     API    = require('../javascripts/utils');
 
-describe('A test suite', function () {
+describe('Integration', function () {
 
   var gusher1, gusher2;
 

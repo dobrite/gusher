@@ -20,6 +20,9 @@ Gusher.prototype.subscribe = function (channelName) {
   return channel;
 };
 
+Gusher.prototype.unsubscribe = function (channelName) {
+};
+
 Gusher.prototype.disconnect = function () {
   this.connection.disconnect();
 };
