@@ -5,10 +5,11 @@ var _            = require('lodash'),
     Connection   = require('./connection'),
     Bus          = require('./bus');
 
-var subscribedChannels = {};
+var subscribedChannels;
 
 function Gusher (applicationKey, options) {
   options || (options = {});
+  subscribedChannels = {};
   this.options = options;
   this.bus = new Bus();
   this.connection = new Connection(this.bus);
@@ -29,6 +30,7 @@ Gusher.prototype.allChannels = function () {
 
 Gusher.prototype.disconnect = function () {
   this.connection.disconnect();
+  //TODO actually disconnect from each channel
 };
 
 module.exports = Gusher;

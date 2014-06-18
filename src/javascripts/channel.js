@@ -1,13 +1,13 @@
 var _            = require('lodash'),
     EventEmitter = require('events').EventEmitter;
 
-var Channel = function (channelName, bus) {
-  this.channelName = channelName;
+var Channel = function (name, bus) {
+  this.name = name;
   this.bus = bus;
 };
 
 Channel.prototype.bind = function(eventName, callback) {
-  this.bus.bind(this.channelName + ":" + eventName, callback);
+  this.bus.bind(this.name + ":" + eventName, callback);
 };
 
 module.exports = Channel;
