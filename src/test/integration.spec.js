@@ -28,7 +28,7 @@ describe('Integration', function () {
   it('publishes the message', function (done) {
     var channel = gusher1.subscribe('test-channel');
     channel.bind('test-event', function (data) {
-      expect(data.message).to.be.equal('yo!');
+      expect(data.message).toEqual('yo!');
       done();
     });
     API.post('test-channel', 'test-event', { message: "yo!" });
@@ -37,7 +37,7 @@ describe('Integration', function () {
   it('publishes the message to others', function (done) {
     var channel = gusher2.subscribe('test-channel');
     channel.bind('test-event', function (data) {
-      expect(data.message).to.be.equal('yo!');
+      expect(data.message).toEqual('yo!');
       done();
     });
     API.post('test-channel', 'test-event', { message: "yo!" });
