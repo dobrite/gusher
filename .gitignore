@@ -39,3 +39,4 @@ tags
 
 # API Keys and such
 .env
+*.pem
