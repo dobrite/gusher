@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"github.com/dobrite/gusher/go/channels"
-	"github.com/igm/sockjs-go/sockjs"
+	"github.com/dobrite/gusher/go/gusher"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,12 +9,9 @@ import (
 )
 
 func main() {
-	gusher.Channels = make(map[string]*gusher.Channel)
-	gusher.Channels["test-channel"] = new(gusher.Channel)
-	http.Handle("/gusher/", sockjs.NewHandler("/gusher", sockjs.DefaultOptions, gusherHandler))
-	http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
-	http.HandleFunc("/api/", API)
-	http.HandleFunc("/", Index)
+	gmux := gusher.NewServeMux("/gusher")
+	gmux.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
+	gmux.HandleFunc("/", Index)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -24,65 +19,11 @@ func main() {
 	}
 
 	log.Println("Server started")
-	log.Fatal(http.ListenAndServe(":"+port, nil))
-}
-
-func subscribe(session sockjs.Session, closedSession chan struct{}) {
-	reader, _ := gusher.Channels["test-channel"].SubChannel(nil)
-	for {
-		select {
-		case <-closedSession:
-			log.Println("subscribe closed")
-			return
-		case message := <-reader:
-			msg := message.(string)
-			log.Println("Msg sent: " + msg)
-			if err := session.Send(msg); err != nil {
-				return
-			}
-		}
-	}
-}
-
-func gusherHandler(session sockjs.Session) {
-	log.Println("Client connected")
-	//chat.Publish("[info] chatter joined")
-	//defer chat.Publish("[info] chatter left")
-	closedSession := make(chan struct{})
-	go subscribe(session, closedSession)
-	for {
-		if raw, err := session.Recv(); err == nil {
-			log.Println("Msg rec'd: " + raw)
-			gusher.Channels["test-channel"].Publish(raw)
-			continue
-		}
-		log.Println("Client disconnected")
-		break
-	}
-	close(closedSession)
-	log.Println("Session closed")
-}
-
-type Message struct {
-	Channel string `json:"channel"`
-	Event   string `json:"event"`
-	Data    string `json:"data"`
-}
-
-func API(w http.ResponseWriter, req *http.Request) {
-	if req.Method != "POST" {
-		return
-	}
-	channel := req.PostFormValue("channel")
-	event := req.PostFormValue("event")
-	data := req.PostFormValue("data")
-	m := Message{channel, event, data}
-	payload, _ := json.Marshal(m)
-	gusher.Channels[channel].Publish(string(payload))
+	log.Fatal(http.ListenAndServe(":"+port, gmux))
 }
 
 func Index(w http.ResponseWriter, req *http.Request) {
-	log.Println(req.URL.Path)
+	//use http.ServeFile https://github.com/fzzy/sockjs-go/blob/master/examples/chat/chat.go
 	if req.URL.Path != "/" {
 		http.NotFound(w, req)
 		return

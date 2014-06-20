@@ -10,7 +10,7 @@ var PostData = function (channel, event, data) {
 
 var post = function (channel, event, data) {
   var request = new XMLHttpRequest();
-  request.open('POST', config.fqd + '/api/', true);
+  request.open('POST', config.fqd + '/gusher/api/', true);
   request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
   request.send(querystring.stringify(new PostData(channel, event, data)));
 };
