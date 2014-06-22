@@ -1,6 +1,7 @@
 package gusher
 
 import (
+	"github.com/igm/sockjs-go/sockjs"
 	"sync"
 )
 
@@ -25,10 +26,15 @@ func (chs *channels) get(channelName string) *channel {
 }
 
 func (chs *channels) publish(channelName string, payload string) {
+	//check if channel is empty
 	chs.get(channelName).Publish(payload)
 }
 
 func (chs *channels) subChannel(channelName string) <-chan interface{} {
 	sc, _ := chs.get(channelName).SubChannel(nil)
 	return sc
+}
+
+func (chs *channels) subscribe(channelName string, session *sockjs.Session) {
+	chs.get(channelName).subscribe(session)
 }

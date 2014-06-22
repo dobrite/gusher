@@ -27,7 +27,7 @@ func (g *handler) API() http.Handler {
 		channel := req.PostFormValue("channel")
 		event := req.PostFormValue("event")
 		data := req.PostFormValue("data")
-		m := message{channel, event, data}
+		m := post{channel, event, data}
 		payload, _ := json.Marshal(m)
 		g.publish(channel, string(payload))
 	})
@@ -38,17 +38,22 @@ func (g *handler) handler(session sockjs.Session) {
 	//chat.Publish("[info] chatter joined")
 	//defer chat.Publish("[info] chatter left")
 	closedSession := make(chan struct{})
+	defer close(closedSession)
+	defer session.Close(1, "")
 	go g.subscribe(session, closedSession)
 	for {
 		if raw, err := session.Recv(); err == nil {
 			log.Println("Msg rec'd: " + raw)
-			g.publish("test-channel", raw)
+			if msg, err := MessageUnmarshalJSON([]byte(raw)); err == nil {
+				msg.handle(g, &session)
+				continue
+			}
+			log.Println("Error unmarshaling JSON: " + err.Error())
 			continue
 		}
 		log.Println("Client disconnected")
 		break
 	}
-	close(closedSession)
 	log.Println("Session closed")
 }
 

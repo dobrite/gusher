@@ -22,6 +22,7 @@ var Connection = function (bus) {
   this.connection.onopen    = onopen.bind(this);
   this.connection.onclose   = onclose.bind(this);
   this.connection.onmessage = onmessage.bind(this);
+  bus.send = this.connection.send.bind(this.connection);
 };
 
 Connection.prototype.bind = function (eventName, callback) {

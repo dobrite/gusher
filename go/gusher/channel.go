@@ -13,3 +13,8 @@ type channel struct {
 func newChannel() *channel {
 	return &channel{sessions: make(map[string]*sockjs.Session)}
 }
+
+func (ch *channel) subscribe(session *sockjs.Session) {
+	id := session.Recv()
+	ch.sessions[session.ID()] = session
+}
