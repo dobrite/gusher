@@ -43,8 +43,4 @@ describe('Integration', function () {
     API.post('test-channel', 'test-event', { message: "yo!" });
   });
 
-  iit('subscribes to a channel and receives events', function (done) {
-    var channel = gusher1.subscribe('tester');
-  });
-
 });

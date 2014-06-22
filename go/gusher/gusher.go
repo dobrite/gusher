@@ -2,7 +2,7 @@ package gusher
 
 import (
 	"encoding/json"
-	"github.com/igm/sockjs-go/sockjs"
+	"gopkg.in/igm/sockjs-go.v2/sockjs"
 	"log"
 	"net/http"
 )
@@ -33,19 +33,32 @@ func (g *handler) API() http.Handler {
 	})
 }
 
+func (g *handler) handleMessage(msg data, session sockjs.Session) {
+	switch msg := msg.(type) {
+	case dataSubscribe:
+		g.get(msg.Channel).subscribe(session)
+		log.Println("  subscribed " + session.ID() + " to " + msg.Channel)
+	case dataUnsubscribe:
+		g.get(msg.Channel).unsubscribe(session)
+		log.Println("unsubscribed " + session.ID() + " to " + msg.Channel)
+	default:
+		log.Fatal("I give up")
+	}
+}
+
 func (g *handler) handler(session sockjs.Session) {
 	log.Println("Client connected")
 	//chat.Publish("[info] chatter joined")
 	//defer chat.Publish("[info] chatter left")
-	closedSession := make(chan struct{})
-	defer close(closedSession)
+	//closedSession := make(chan struct{})
+	//defer close(closedSession)
 	defer session.Close(1, "")
-	go g.subscribe(session, closedSession)
+	//go g.subscribe(session, closedSession)
 	for {
 		if raw, err := session.Recv(); err == nil {
 			log.Println("Msg rec'd: " + raw)
 			if msg, err := MessageUnmarshalJSON([]byte(raw)); err == nil {
-				msg.handle(g, &session)
+				g.handleMessage(msg, session)
 				continue
 			}
 			log.Println("Error unmarshaling JSON: " + err.Error())

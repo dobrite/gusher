@@ -3,7 +3,6 @@ package gusher
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/igm/sockjs-go/sockjs"
 )
 
 type post struct {
@@ -13,7 +12,6 @@ type post struct {
 }
 
 type data interface {
-	handle(*handler, *sockjs.Session)
 	//prob want to do json.Marshal
 }
 
@@ -30,17 +28,9 @@ type dataSubscribe struct {
 	ChannelData string `json:"channel_data"`
 }
 
-func (d dataSubscribe) handle(g *handler, session *sockjs.Session) {
-	g.channels.subscribe(d.Channel, session)
-}
-
 // client -> gusher
 type dataUnsubscribe struct {
 	Channel string `json:"channel"`
-}
-
-func (d dataUnsubscribe) handle(g *handler, session *sockjs.Session) {
-
 }
 
 // gusher -> client
