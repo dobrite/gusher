@@ -1,24 +1,27 @@
-var Gusher  = require('../javascripts/gusher'),
-    Channel = require('../javascripts/channel');
+var Gusher    = require('../javascripts/gusher'),
+    Channel   = require('../javascripts/channel'),
+    testUtils = require('./test-utils');
 
 describe('Channel', function () {
 
-  var channel1;
+  var client, channel1;
 
   beforeEach(function (done) {
-    gusher1 = new Gusher(); //stub connection at some point
-    gusher1.connection.bind('connected', function () {
-      channel1 = gusher1.subscribe('test_channel');
-      done();
-    });
+    client = testUtils.setupClients(1, done);
+  });
+
+  afterEach(function (done) {
+    testUtils.teardownClients(client, done);
   });
 
   describe('constructor', function () {
+    beforeEach(function (done) {
+      channel1 = client[0].subscribe('test_channel');
+      done();
+    });
 
     it('has a channel name', function () {
       expect(channel1.name).toEqual('test_channel');
     });
-
   });
-
 });
