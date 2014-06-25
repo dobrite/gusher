@@ -39,8 +39,3 @@ func (chs *channels) unsubscribe(channelName string, session sockjs.Session) {
 	chs.channels[channelName].unsubscribe(session)
 	//check if empty and delete
 }
-
-func (chs *channels) subChannel(channelName string) <-chan interface{} {
-	sc, _ := chs.get(channelName).SubChannel(nil)
-	return sc
-}

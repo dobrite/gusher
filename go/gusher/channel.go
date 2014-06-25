@@ -1,13 +1,11 @@
 package gusher
 
 import (
-	"github.com/igm/pubsub"
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
 )
 
 type channel struct {
 	sessions map[string]sockjs.Session
-	pubsub.Publisher
 }
 
 func newChannel() *channel {
