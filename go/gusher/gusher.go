@@ -48,41 +48,26 @@ func (g *handler) handleMessage(msg message, session sockjs.Session) {
 
 func (g *handler) handler(session sockjs.Session) {
 	log.Println("Client connected")
-	//chat.Publish("[info] chatter joined")
-	//defer chat.Publish("[info] chatter left")
-	//closedSession := make(chan struct{})
-	//defer close(closedSession)
-	defer session.Close(1, "")
-	//go g.subscribe(session, closedSession)
+	defer g.teardownSession(session)
 	for {
-		if raw, err := session.Recv(); err == nil {
-			log.Println("Msg rec'd: " + raw)
-			if msg, err := MessageUnmarshalJSON([]byte(raw)); err == nil {
-				g.handleMessage(msg, session)
-				continue
-			}
-			log.Println("Error unmarshaling JSON: " + err.Error())
-			continue
+		raw, err := session.Recv()
+		if err != nil {
+			log.Println("Client disconnected")
+			break
 		}
-		log.Println("Client disconnected")
-		break
+
+		log.Println("Msg rec'd: " + raw)
+		msg, err := MessageUnmarshalJSON([]byte(raw))
+		if err != nil {
+			log.Println("Error unmarshaling JSON: " + err.Error())
+			break
+		}
+
+		g.handleMessage(msg, session)
 	}
-	log.Println("Session closed")
 }
 
-func (g *handler) subscribe(session sockjs.Session, closedSession chan struct{}) {
-	reader := g.subChannel("test-channel")
-	for {
-		select {
-		case <-closedSession:
-			log.Println("subscribe closed")
-			return
-		case message := <-reader:
-			msg := message.(string)
-			log.Println("Msg sent: " + msg)
-			if err := session.Send(msg); err != nil {
-				return
-			}
-		}
-	}
+func (g *handler) teardownSession(session sockjs.Session) {
+	log.Println("Session closed")
+	session.Close(1, "")
 }
