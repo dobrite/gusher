@@ -17,7 +17,7 @@ func main() {
 		port = "3000"
 	}
 
-	log.Println("Server started")
+	log.Println("server started")
 	log.Fatal(http.ListenAndServe(":"+port, gmux))
 }
 
