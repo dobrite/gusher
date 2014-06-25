@@ -37,7 +37,7 @@ func (g *handler) handleMessage(msg message, session sockjs.Session) {
 	switch msg := msg.(type) {
 	case messageSubscribe:
 		g.get(msg.Channel).subscribe(session)
-		log.Println("  subscribed " + session.ID() + " to " + msg.Channel)
+		log.Println("subscribed " + session.ID() + " to " + msg.Channel)
 	case messageUnsubscribe:
 		g.get(msg.Channel).unsubscribe(session)
 		log.Println("unsubscribed " + session.ID() + " to " + msg.Channel)
@@ -47,19 +47,19 @@ func (g *handler) handleMessage(msg message, session sockjs.Session) {
 }
 
 func (g *handler) handler(session sockjs.Session) {
-	log.Println("Client connected")
+	log.Println("client connected")
 	defer g.teardownSession(session)
 	for {
 		raw, err := session.Recv()
 		if err != nil {
-			log.Println("Client disconnected")
+			log.Println("client disconnected")
 			break
 		}
 
-		log.Println("Msg rec'd: " + raw)
+		log.Println("msg rec'd: " + raw)
 		msg, err := MessageUnmarshalJSON([]byte(raw))
 		if err != nil {
-			log.Println("Error unmarshaling JSON: " + err.Error())
+			log.Println("error unmarshaling json: " + err.Error())
 			break
 		}
 
@@ -68,6 +68,7 @@ func (g *handler) handler(session sockjs.Session) {
 }
 
 func (g *handler) teardownSession(session sockjs.Session) {
-	log.Println("Session closed")
+	log.Println("session closed")
 	session.Close(1, "")
+	//remove session from all channels
 }
