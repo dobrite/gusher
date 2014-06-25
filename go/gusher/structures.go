@@ -11,57 +11,57 @@ type post struct {
 	Data    string `json:"data"`
 }
 
-type data interface {
+type message interface {
 	//prob want to do json.Marshal
 }
 
-type dataEvent struct {
+type messageEvent struct {
 	Event   string          `json:"event"`
 	Channel string          `json:"channel"`
 	Data    json.RawMessage `json:"data,string"`
 }
 
 // client -> gusher
-type dataSubscribe struct {
+type messageSubscribe struct {
 	Channel     string `json:"channel"`
 	Auth        string `json:"auth"`
 	ChannelData string `json:"channel_data"`
 }
 
 // client -> gusher
-type dataUnsubscribe struct {
+type messageUnsubscribe struct {
 	Channel string `json:"channel"`
 }
 
 // gusher -> client
-type dataError struct {
+type messageError struct {
 	Message string `json:"message"`
 	Code    uint16 `json:"code"`
 }
 
 // gusher -> client
-type dataConnectionEstablished struct {
+type messageConnectionEstablished struct {
 	SocketId        string `json:"socket_id"`
 	ActivityTimeout uint8  `json:"activity_timeout"`
 }
 
-func MessageUnmarshalJSON(b []byte) (d data, err error) {
-	var env dataEvent
-	err = json.Unmarshal(b, &env)
+func MessageUnmarshalJSON(b []byte) (msg message, err error) {
+	var event messageEvent
+	err = json.Unmarshal(b, &event)
 	if err != nil {
 		return
 	}
-	switch env.Event {
+	switch event.Event {
 	case "gusher:subscribe":
-		var data dataSubscribe
-		err = json.Unmarshal(env.Data, &data)
-		d = data
+		var msgSub messageSubscribe
+		err = json.Unmarshal(event.Data, &msgSub)
+		msg = msgSub
 	case "gusher:unsubscribe":
-		var data dataUnsubscribe
-		err = json.Unmarshal(env.Data, &data)
-		d = data
+		var msgUnsub messageUnsubscribe
+		err = json.Unmarshal(event.Data, &msgUnsub)
+		msg = msgUnsub
 	default:
-		err = fmt.Errorf("%s is not a recognized event", env.Event)
+		err = fmt.Errorf("%s is not a recognized event", event.Event)
 	}
 	return
 }

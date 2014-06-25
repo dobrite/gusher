@@ -10,7 +10,7 @@ func TestStructuresSubscribe(t *testing.T) {
 		"data":"{\"channel\":\"tester\",\"auth\":\"auth type stuff\",\"channel_data\":\"channel data type stuff\"}"
 	}`)
 	msg, err := MessageUnmarshalJSON(b)
-	sub := msg.(dataSubscribe)
+	sub := msg.(messageSubscribe)
 	if err != nil {
 		t.Errorf("MessageUnmarshalJSON error: %s", err)
 	}
@@ -31,7 +31,7 @@ func TestStructuresUnsubscribe(t *testing.T) {
 		"data":"{\"channel\":\"tester\"}"
 	}`)
 	msg, err := MessageUnmarshalJSON(b)
-	unsub := msg.(dataUnsubscribe)
+	unsub := msg.(messageUnsubscribe)
 	if err != nil {
 		t.Errorf("MessageUnmarshalJSON error: %s", err)
 	}

@@ -33,12 +33,12 @@ func (g *handler) API() http.Handler {
 	})
 }
 
-func (g *handler) handleMessage(msg data, session sockjs.Session) {
+func (g *handler) handleMessage(msg message, session sockjs.Session) {
 	switch msg := msg.(type) {
-	case dataSubscribe:
+	case messageSubscribe:
 		g.get(msg.Channel).subscribe(session)
 		log.Println("  subscribed " + session.ID() + " to " + msg.Channel)
-	case dataUnsubscribe:
+	case messageUnsubscribe:
 		g.get(msg.Channel).unsubscribe(session)
 		log.Println("unsubscribed " + session.ID() + " to " + msg.Channel)
 	default:
