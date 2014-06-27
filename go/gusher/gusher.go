@@ -66,9 +66,3 @@ func (g *handler) handler(session sockjs.Session) {
 		g.handleMessage(msg, session)
 	}
 }
-
-func (g *handler) teardownSession(session sockjs.Session) {
-	log.Println("session closed")
-	session.Close(1, "")
-	//remove session from all channels
-}
