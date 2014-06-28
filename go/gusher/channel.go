@@ -5,44 +5,55 @@ import (
 )
 
 type channel struct {
-	subscribers map[string]*session
-	sub         <-chan *session
-	unsub       <-chan *session
-	pub         <-chan string
+	subscribers map[string]chan string
+	sub         chan *gsession
+	unsub       chan *gsession
+	pub         chan string
 	fin         chan struct{}
 }
 
 func newChannel() *channel {
-	channel := &channel{subscribers: make(map[string]*session)}
+	channel := &channel{
+		subscribers: make(map[string]chan string),
+		sub:         make(chan *gsession),
+		unsub:       make(chan *gsession),
+		pub:         make(chan string),
+		fin:         make(chan struct{}),
+	}
 	go channel.run()
 	return channel
 }
 
 func (ch *channel) run() {
 	defer ch.teardown()
+	log.Println("channel running")
 	for {
 		select {
 		case subscriber := <-ch.sub:
-			ch.add(subscriber.ID(), subscriber)
+			log.Println("subscribing: " + subscriber.ID())
+			ch.subscribe(subscriber.ID(), subscriber.in)
 		case subscriber := <-ch.unsub:
-			ch.remove(subscriber.ID())
+			log.Println("unsubscribing: " + subscriber.ID())
+			ch.unsubscribe(subscriber.ID())
 		case payload := <-ch.pub:
+			log.Println("payload recd: " + payload)
 			ch.broadcast(payload)
 		case <-ch.fin:
 			break
 		}
 	}
+	log.Println("channel done")
 }
 
 func (ch *channel) teardown() {
 	log.Println("channel closing shop")
 }
 
-func (ch *channel) add(id string, subscriber *session) {
-	ch.subscribers[id] = subscriber
+func (ch *channel) subscribe(id string, connc chan string) {
+	ch.subscribers[id] = connc
 }
 
-func (ch *channel) remove(id string) {
+func (ch *channel) unsubscribe(id string) {
 	delete(ch.subscribers, id)
 	log.Println("length: ")
 	log.Println(len(ch.subscribers))
@@ -52,11 +63,8 @@ func (ch *channel) remove(id string) {
 }
 
 func (ch *channel) broadcast(payload string) {
-	for id, subscriber := range ch.subscribers {
-		select {
-		case subscriber.in <- payload:
-		default:
-			ch.remove(id)
-		}
+	log.Println("broadcasting")
+	for _, connc := range ch.subscribers {
+		connc <- payload
 	}
 }

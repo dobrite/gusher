@@ -1,8 +1,6 @@
 package gusher
 
-import (
-	"gopkg.in/igm/sockjs-go.v2/sockjs"
-)
+import ()
 
 type dispatcher struct {
 }

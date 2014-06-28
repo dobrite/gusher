@@ -5,47 +5,51 @@ import (
 	"log"
 )
 
-type session struct {
+type gsession struct {
 	sockjs.Session
 	in  chan string
 	out chan string
 }
 
-func newSession(sockjsSession sockjs.Session, out chan string) *session {
-	session := &session{sockjsSession, make(chan string), out}
-	session.setup()
-	return session
+func newSession(sockjsSession sockjs.Session, out chan string) *gsession {
+	gsession := &gsession{
+		sockjsSession,
+		make(chan string),
+		out,
+	}
+	go gsession.sender()
+	go gsession.receiver()
+	return gsession
 }
 
-func (s *session) setup() {
-	log.Println("client connected")
-	go s.sendPump()
-	go s.recvPump()
-	log.Println("client disconnected")
-}
-
-func (s *session) teardown() {
+func (g *gsession) teardown() {
 	log.Println("session closed")
-	s.Close(1, "") //do something better than this
+	g.Close(1, "") //do something better than this
+	close(g.in)
+	close(g.out)
 	//remove session from all channels
 }
 
 //writepump
-func (s *session) sendPump() {
+func (g *gsession) sender() {
 	for {
-		msg := <-s.in
-		s.Send(msg)
+		if msg, ok := <-g.in; ok {
+			g.Send(msg)
+		}
+		log.Println("sender closed")
+		break
 	}
 }
 
 //readpump
-func (s *session) recvPump() {
-	defer s.teardown()
+func (g *gsession) receiver() {
+	defer g.teardown()
 	for {
-		raw, err := s.Recv()
+		raw, err := g.Recv()
 		if err != nil {
 			break
 		}
-		//should be like handler.handle <- raw
+		g.out <- raw
 	}
+	log.Println("receiver closed")
 }

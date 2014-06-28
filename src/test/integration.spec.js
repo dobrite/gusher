@@ -8,7 +8,7 @@ describe('Integration', function () {
   var clients;
 
   beforeEach(function (done) {
-    clients = testUtils.setupClients(2, done);
+    clients = testUtils.setupClients(1, done);
   });
 
   afterEach(function (done) {
