@@ -2,39 +2,50 @@ package gusher
 
 import (
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
-	"sync"
 )
 
+type channelName string
+type sessionID string
+
 type channels struct {
-	mutex    sync.Mutex
-	channels map[string]*channel
+	channels map[channelName]*channel
+	fins     map[sessionID]chan struct{}
 }
 
 func newChannels() *channels {
-	return &channels{channels: make(map[string]*channel)}
+	channels := &channels{
+		channels: make(map[channelName]*channel),
+		fins:     make(map[sessionID]chan struct{}),
+	}
+	go channels.run()
+	return channels
 }
 
-func (chs *channels) get(channelName string) *channel {
+func (chs *channels) run() {
+	for {
+		select {}
+	}
+}
+
+func (chs *channels) get(channelName channelName) *channel {
 	if ch, ok := chs.channels[channelName]; ok {
 		return ch
 	}
-	chs.mutex.Lock()
-	defer chs.mutex.Unlock()
 	ch := newChannel()
 	chs.channels[channelName] = ch
 	return ch
 }
 
-func (chs *channels) publish(channelName string, payload string) {
+func (chs *channels) publish(channelName channelName, payload string) {
 	//check if channel is empty
 	chs.get(channelName).publish(payload)
 }
 
-func (chs *channels) subscribe(channelName string, session sockjs.Session) {
+func (chs *channels) subscribe(channelName channelName, session sockjs.Session) {
 	chs.get(channelName).subscribe(session)
 }
 
-func (chs *channels) unsubscribe(channelName string, session sockjs.Session) {
+func (chs *channels) unsubscribe(channelName channelName, session sockjs.Session) {
 	//assert someone in here
 	chs.channels[channelName].unsubscribe(session)
 	//check if empty and delete

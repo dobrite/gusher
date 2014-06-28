@@ -36,10 +36,10 @@ func (g *handler) API() http.Handler {
 func (g *handler) handleMessage(msg message, session sockjs.Session) {
 	switch msg := msg.(type) {
 	case messageSubscribe:
-		g.get(msg.Channel).subscribe(session)
+		g.get(msg.Channel).subscribe(&session)
 		log.Println("subscribed " + session.ID() + " to " + msg.Channel)
 	case messageUnsubscribe:
-		g.get(msg.Channel).unsubscribe(session)
+		g.get(msg.Channel).unsubscribe(&session)
 		log.Println("unsubscribed " + session.ID() + " to " + msg.Channel)
 	default:
 		log.Fatal("I give up")
@@ -47,22 +47,23 @@ func (g *handler) handleMessage(msg message, session sockjs.Session) {
 }
 
 func (g *handler) handler(session sockjs.Session) {
-	log.Println("client connected")
-	defer g.teardownSession(session)
-	for {
-		raw, err := session.Recv()
-		if err != nil {
-			log.Println("client disconnected")
-			break
-		}
+	dispatch.register(session)
 
-		log.Println("msg rec'd: " + raw)
-		msg, err := MessageUnmarshalJSON([]byte(raw))
-		if err != nil {
-			log.Println("error unmarshaling json: " + err.Error())
-			break
-		}
+	//defer g.teardownSession(session) //unsub from all channels
+	//for {
+	//	raw, err := session.Recv()
+	//	if err != nil {
+	//		log.Println("client disconnected")
+	//		break
+	//	}
 
-		g.handleMessage(msg, session)
-	}
+	//	log.Println("msg rec'd: " + raw)
+	//	msg, err := MessageUnmarshalJSON([]byte(raw))
+	//	if err != nil {
+	//		log.Println("error unmarshaling json: " + err.Error())
+	//		break
+	//	}
+
+	//	g.handleMessage(msg, session)
+	//}
 }
