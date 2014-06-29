@@ -33,7 +33,7 @@ func (h *handler) API() http.Handler {
 		data := req.PostFormValue("data")
 		m := post{channel, event, data}
 		payload, _ := json.Marshal(m)
-		h.publish(channel, string(payload))
+		h.pub <- &publish{channel, string(payload)}
 	})
 }
 
@@ -74,10 +74,10 @@ func (h *handler) handleMessage(msg message, toSock chan string) {
 	switch msg := msg.(type) {
 	case messageSubscribe:
 		log.Println("subscribed to " + msg.Channel)
-		h.subscribe(msg.Channel, toSock)
+		h.sub <- &subscribe{msg.Channel, toSock}
 	case messageUnsubscribe:
 		log.Println("unsubscribed to " + msg.Channel)
-		h.unsubscribe(msg.Channel, toSock)
+		h.unsub <- &unsubscribe{msg.Channel, toSock}
 	default:
 		log.Fatal("I give up")
 	}

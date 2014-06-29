@@ -1,17 +1,35 @@
 package gusher
 
-import (
-	"sync"
-)
+import ()
 
 type channels struct {
 	channels map[string]*channel
-	mutex    sync.Mutex
+	pub      chan *publish
+	unsub    chan *unsubscribe
+	sub      chan *subscribe
+}
+
+type subscribe struct {
+	channelName string
+	c           chan string
+}
+
+type unsubscribe struct {
+	channelName string
+	c           chan string
+}
+
+type publish struct {
+	channelName string
+	payload     string
 }
 
 func newChannels() *channels {
 	channels := &channels{
 		channels: make(map[string]*channel),
+		sub:      make(chan *subscribe),
+		unsub:    make(chan *unsubscribe),
+		pub:      make(chan *publish),
 	}
 	go channels.run()
 	return channels
@@ -19,7 +37,14 @@ func newChannels() *channels {
 
 func (chs *channels) run() {
 	for {
-		select {}
+		select {
+		case s := <-chs.sub:
+			chs.subscribe(s.channelName, s.c)
+		case u := <-chs.unsub:
+			chs.subscribe(u.channelName, u.c)
+		case p := <-chs.pub:
+			chs.publish(p.channelName, p.payload)
+		}
 	}
 }
 
@@ -31,10 +56,7 @@ func (chs *channels) _get(channelName string) *channel {
 }
 
 func (chs *channels) create(channelName string) *channel {
-	chs.mutex.Lock()
-	defer chs.mutex.Unlock()
 	ch := newChannel()
-	//switch to channel
 	chs.channels[channelName] = ch
 	return ch
 }

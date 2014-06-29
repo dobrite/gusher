@@ -5,14 +5,14 @@ import (
 )
 
 type registry struct {
-	gsessions map[string]*gsession
+	gsessions map[*gsession]bool
 	add       chan *gsession
 	remove    chan *gsession
 }
 
 func newRegistry() *registry {
 	registry := &registry{
-		gsessions: make(map[string]*gsession),
+		gsessions: make(map[*gsession]bool),
 		add:       make(chan *gsession),
 		remove:    make(chan *gsession),
 	}
@@ -25,9 +25,9 @@ func (r *registry) run() {
 	for {
 		select {
 		case gsession := <-r.add:
-			r.register(gsession.s.ID(), gsession)
+			r.register(gsession)
 		case gsession := <-r.remove:
-			r.unregister(gsession.s.ID())
+			r.unregister(gsession)
 		}
 	}
 }
@@ -36,10 +36,11 @@ func (r *registry) teardown() {
 	log.Println("registry closing shop")
 }
 
-func (r *registry) register(id string, gsession *gsession) {
-	r.gsessions[id] = gsession
+func (r *registry) register(gsession *gsession) {
+	r.gsessions[gsession] = true
 }
 
-func (r *registry) unregister(id string) {
-	delete(r.gsessions, id)
+func (r *registry) unregister(gsession *gsession) {
+	gsession.close()
+	delete(r.gsessions, gsession)
 }
