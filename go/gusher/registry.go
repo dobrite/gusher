@@ -25,9 +25,9 @@ func (r *registry) run() {
 	for {
 		select {
 		case gsession := <-r.add:
-			r.register(gsession.ID(), gsession)
+			r.register(gsession.s.ID(), gsession)
 		case gsession := <-r.remove:
-			r.unregister(gsession.ID())
+			r.unregister(gsession.s.ID())
 		}
 	}
 }

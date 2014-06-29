@@ -24,7 +24,7 @@ func newSession(sockjsSession sockjs.Session, toGush chan string, toSock chan st
 	return gs
 }
 
-func (gs *gsession) stop() error {
+func (gs *gsession) close() error {
 	log.Println("session closed")
 	gs.s.Close(1, "arghhhh") //do something better than this
 	gs.t.Kill(nil)
@@ -51,14 +51,14 @@ func (gs *gsession) sender() error {
 func (gs *gsession) receiver() error {
 	defer func() { log.Println("receiver exiting") }()
 	for {
-		if raw, err := gs.s.Recv(); err != nil {
+		raw, err := gs.s.Recv()
+		if err != nil {
 			return err
-		} else {
-			select {
-			case gs.toGush <- raw:
-			case <-gs.t.Dying():
-				return tomb.ErrDying
-			}
+		}
+		select {
+		case gs.toGush <- raw:
+		case <-gs.t.Dying():
+			return tomb.ErrDying
 		}
 	}
 }

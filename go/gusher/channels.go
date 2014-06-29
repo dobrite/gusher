@@ -44,13 +44,13 @@ func (chs *channels) publish(channelName string, payload string) {
 	chs._get(channelName).pub <- payload
 }
 
-func (chs *channels) subscribe(channelName string, gsession *gsession) {
-	chs._get(channelName).sub <- gsession
+func (chs *channels) subscribe(channelName string, toSock chan string) {
+	chs._get(channelName).sub <- toSock
 }
 
-func (chs *channels) unsubscribe(channelName string, gsession *gsession) {
+func (chs *channels) unsubscribe(channelName string, toSock chan string) {
 	//assert someone in here
-	chs.channels[channelName].unsub <- gsession
+	chs.channels[channelName].unsub <- toSock
 	//check if empty and delete
 }
 

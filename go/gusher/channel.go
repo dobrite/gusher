@@ -6,8 +6,8 @@ import (
 
 type channel struct {
 	subscribers map[string]chan string
-	sub         chan *gsession
-	unsub       chan *gsession
+	sub         chan (chan string)
+	unsub       chan (chan string)
 	pub         chan string
 	fin         chan struct{}
 }
@@ -15,8 +15,8 @@ type channel struct {
 func newChannel() *channel {
 	channel := &channel{
 		subscribers: make(map[string]chan string),
-		sub:         make(chan *gsession),
-		unsub:       make(chan *gsession),
+		sub:         make(chan (chan string)),
+		unsub:       make(chan (chan string)),
 		pub:         make(chan string),
 		fin:         make(chan struct{}),
 	}
@@ -29,12 +29,10 @@ func (ch *channel) run() {
 	log.Println("channel running")
 	for {
 		select {
-		case subscriber := <-ch.sub:
-			log.Println("subscribing: " + subscriber.ID())
-			ch.subscribe(subscriber.ID(), subscriber.in)
-		case subscriber := <-ch.unsub:
-			log.Println("unsubscribing: " + subscriber.ID())
-			ch.unsubscribe(subscriber.ID())
+		case c := <-ch.sub:
+			ch.subscribe("", c)
+		case <-ch.unsub:
+			ch.unsubscribe("")
 		case payload := <-ch.pub:
 			log.Println("payload recd: " + payload)
 			ch.broadcast(payload)

@@ -63,10 +63,6 @@ var _ = Describe("Session", func() {
 		gs = newSession(sm, toGush, toSock)
 	})
 
-	AfterEach(func() {
-		//gs.stop()
-	})
-
 	Describe("sender", func() {
 		It("calls Send with msg", func() {
 			toSock <- "YO!"
