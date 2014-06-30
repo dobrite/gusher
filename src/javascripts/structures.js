@@ -11,4 +11,13 @@ structures.subscribe = function(channelName) {
   };
 };
 
+structures.unsubscribe = function(channelName) {
+  return {
+    "event": "gusher:unsubscribe",
+    "data": JSON.stringify({ //JSON serialized String
+      "channel": channelName,
+    })
+  };
+};
+
 module.exports = structures;
