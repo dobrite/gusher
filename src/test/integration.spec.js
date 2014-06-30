@@ -5,14 +5,17 @@ var Promise   = require('es6-promise').Promise,
 
 describe('Integration', function () {
 
-  var clients;
+  var clients, ogTimeout;
 
   beforeEach(function (done) {
-    clients = testUtils.setupClients(1, done);
+    ogTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+    clients = testUtils.setupClients(10, done);
   });
 
   afterEach(function (done) {
     testUtils.teardownClients(clients, done);
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = ogTimeout;
   });
 
   it('publishes the message', function (done) {
