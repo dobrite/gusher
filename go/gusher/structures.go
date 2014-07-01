@@ -39,10 +39,8 @@ type messageError struct {
 	Code    uint16 `json:"code"`
 }
 
-// gusher -> client
-type messageConnectionEstablished struct {
-	SocketId        string `json:"socket_id"`
-	ActivityTimeout uint8  `json:"activity_timeout"`
+func buildMessageConnectionEstablished(id string) string {
+	return fmt.Sprintf(`{"event": "gusher:connection_established", "data": "{\"socket_id\":\"%s\", \"activity_timeout\": 120}" }`, id)
 }
 
 func MessageUnmarshalJSON(b []byte) (msg message, err error) {
