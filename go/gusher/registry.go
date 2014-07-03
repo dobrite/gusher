@@ -87,3 +87,9 @@ func (r *registry) remove(gsession *gsession) {
 		}
 	}
 }
+
+func (r *registry) send(gsession *gsession, payload string) {
+	r.command <- func() {
+		gsession.s.Send(payload)
+	}
+}

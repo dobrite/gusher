@@ -53,4 +53,12 @@ describe('Gusher', function () {
       expect(gusher1.allChannels()).toEqual([channel1]);
     });
   });
+
+  describe('#unsubscribe', function () {
+
+    iit('does not error when called on a channel that is not subscribed', function () {
+      gusher1.unsubscribe('test_channel');
+      expect(1).toEqual(1);
+    });
+  });
 });

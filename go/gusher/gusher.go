@@ -41,6 +41,7 @@ func (h *handler) handler(session sockjs.Session) {
 	toSock := make(chan string)
 	gsession := newSession(session, toGush, toSock)
 	h.registry.add(gsession)
+	h.registry.send(gsession, buildMessageConnectionEstablished(gsession.s.ID()))
 	go h.listen(gsession)
 }
 

@@ -30,7 +30,7 @@ Gusher.prototype.allChannels = function () {
 
 Gusher.prototype.disconnect = function () {
   this.connection.disconnect();
-  //TODO actually disconnect from each channel
+  //TODO actually unsubscribe from each channel
 };
 
 module.exports = Gusher;

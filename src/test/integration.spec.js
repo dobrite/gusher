@@ -10,7 +10,7 @@ describe('Integration', function () {
   beforeEach(function (done) {
     ogTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-    clients = testUtils.setupClients(10, done);
+    clients = testUtils.setupClients(1, done);
   });
 
   afterEach(function (done) {
@@ -18,7 +18,7 @@ describe('Integration', function () {
     jasmine.DEFAULT_TIMEOUT_INTERVAL = ogTimeout;
   });
 
-  it('publishes the message', function (done) {
+  iit('publishes the message', function (done) {
     var channel = clients[0].subscribe('test-channel');
     channel.bind('test-event', function (data) {
       expect(data.message).toEqual('yo!');

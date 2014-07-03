@@ -12,7 +12,9 @@ var onclose = function () {
 
 var onmessage = function (data) {
   var message = JSON.parse(data.data);
+  console.log(message);
   var eventName = message.channel + ":" + message.event;
+  console.log(eventName);
   this.bus.emit(eventName, JSON.parse(message.data));
 };
 
