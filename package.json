@@ -5,7 +5,8 @@
   "main": "src/javascripts/app.js",
   "dependencies": {
     "react": "~0.9",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "process": "~0.7.0"
   },
   "devDependencies": {
     "gulp": "~3.7.0",
