@@ -82,24 +82,3 @@ func (gs *gsession) receiver() error {
 		}
 	}
 }
-
-//type msg struct {
-//	raw string
-//	err error
-//}
-//
-//func (gs *gsession) receiver2() <-chan *msg {
-//	defer func() { log.Println("receiver exiting") }()
-//	c := make(chan *msg)
-//	gs.t.Go(func() error {
-//		for {
-//			if raw, err := gs.s.Recv(); err != nil {
-//				c <- &msg{"", err}
-//				return err
-//			} else {
-//				c <- &msg{raw, nil}
-//			}
-//		}
-//	})
-//	return c
-//}
