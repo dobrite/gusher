@@ -90,6 +90,6 @@ func (r *registry) remove(session *session) {
 
 func (r *registry) send(session *session, payload string) {
 	r.command <- func() {
-		session.conn.trans.send(payload)
+		session.conn.trans.send_(payload)
 	}
 }

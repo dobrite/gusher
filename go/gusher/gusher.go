@@ -16,7 +16,8 @@ func NewServeMux(prefix string) *http.ServeMux {
 		registry: newRegistry(),
 	}
 	mux := http.NewServeMux()
-	mux.Handle(prefix+"/", sockjs.NewHandler(prefix, sockjs.DefaultOptions, h.handler))
+	mux.HandleFunc(prefix+"/websocket", h.websocket)
+	mux.Handle(prefix+"/", sockjs.NewHandler(prefix, sockjs.DefaultOptions, h.sockjs))
 	mux.Handle(prefix+"/api/", h.API())
 	return mux
 }
@@ -35,13 +36,33 @@ func (h *handler) API() http.Handler {
 	})
 }
 
-func (h *handler) handler(transport transport) {
+func (h *handler) sockjs(session sockjs.Session) {
 	log.Println("client connected")
 	toGush := make(chan string)
-	toSock := make(chan string)
-	session := newSession(transport, toGush, toSock)
+	toConn := make(chan string)
+	h.handle(newSockjsTransport(session, toConn, toGush))
+}
+
+func (h *handler) websocket(w http.ResponseWriter, req *http.Request) {
+	log.Println("websocketttttt!")
+	if req.Method != "GET" {
+		http.Error(w, "Method not allowed", 405)
+		return
+	}
+	ws, err := upgrader.Upgrade(w, req, nil)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	toGush := make(chan string)
+	toConn := make(chan string)
+	h.handle(newWebsocketTransport(ws, toConn, toGush))
+}
+
+func (h *handler) handle(transport transport) {
+	session := newSession(transport)
 	h.registry.add(session)
-	h.registry.send(session, buildMessageConnectionEstablished(session.conn.trans.id()))
+	h.registry.send(session, buildMessageConnectionEstablished(session.id))
 	go h.listen(session)
 }
 
@@ -51,8 +72,9 @@ func (h *handler) teardown(session *session) {
 }
 
 func (h *handler) listen(session *session) {
+	toGush := session.conn.trans.toGush_()
 	for {
-		if raw, ok := <-session.conn.toGush; ok {
+		if raw, ok := <-toGush; ok {
 			log.Println("msg rec'd: " + raw)
 
 			msg, err := MessageUnmarshalJSON([]byte(raw))

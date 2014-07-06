@@ -10,23 +10,20 @@ type session struct {
 	id     string
 }
 
-func newSession(transport transport, toGush chan string, toConn chan string) *session {
+func newSession(transport transport) *session {
 	conn := &connection{
-		trans:  transport,
-		toConn: toConn,
-		toGush: toGush,
-		closed: false,
+		trans: transport,
 	}
 
 	sess := &session{
 		conn:   conn,
 		subbed: mapset.NewThreadUnsafeSet(),
-		id:     conn.trans.id(),
+		id:     conn.trans.id_(),
 	}
 
 	// prob put this in connection
 	// and create newConnection factory function
-	sess.conn.tomb.Go(sess.conn.sender)
-	sess.conn.tomb.Go(sess.conn.receiver)
+	sess.conn.trans.go_(sess.conn.trans.sender_)
+	sess.conn.trans.go_(sess.conn.trans.receiver_)
 	return sess
 }
