@@ -9,7 +9,7 @@ import (
 
 type registry struct {
 	sessionids mapset.Set
-	gsessions  map[string]*gsession
+	sessions   map[string]*session
 	channels   map[string]mapset.Set
 	command    chan func()
 	t          tomb.Tomb
@@ -18,7 +18,7 @@ type registry struct {
 func newRegistry() *registry {
 	registry := &registry{
 		sessionids: mapset.NewThreadUnsafeSet(),
-		gsessions:  make(map[string]*gsession),
+		sessions:   make(map[string]*session),
 		channels:   make(map[string]mapset.Set),
 		command:    make(chan func()),
 	}
@@ -39,24 +39,24 @@ func (r *registry) run() error {
 
 // see http://blog.igormihalik.com/2012/12/sockjs-for-go.html
 // for returning values
-func (r *registry) subscribe(msg message, gsession *gsession) {
+func (r *registry) subscribe(msg message, session *session) {
 	r.command <- func() {
 		channelName := msg.(messageSubscribe).Channel
-		sID := gsession.s.ID()
+		sID := session.id
 		_, ok := r.channels[channelName]
 		if !ok {
 			r.channels[channelName] = mapset.NewThreadUnsafeSet()
 		}
 		r.channels[channelName].Add(sID)
-		gsession.subbed.Add(channelName)
+		session.subbed.Add(channelName)
 	}
 }
 
-func (r *registry) unsubscribe(msg message, gsession *gsession) {
+func (r *registry) unsubscribe(msg message, session *session) {
 	r.command <- func() {
 		channelName := msg.(messageSubscribe).Channel
-		r.channels[channelName].Remove(gsession.s.ID())
-		gsession.subbed.Remove(channelName)
+		r.channels[channelName].Remove(session.id)
+		session.subbed.Remove(channelName)
 	}
 }
 
@@ -64,32 +64,32 @@ func (r *registry) publish(channelName string, payload string) {
 	r.command <- func() {
 		c := r.channels[channelName].Iter()
 		for sID := range c {
-			r.gsessions[sID.(string)].toSock <- payload
+			r.sessions[sID.(string)].conn.toConn <- payload
 		}
 	}
 }
 
-func (r *registry) add(gsession *gsession) {
+func (r *registry) add(session *session) {
 	r.command <- func() {
-		sID := gsession.s.ID()
+		sID := session.id
 		r.sessionids.Add(sID)
-		r.gsessions[sID] = gsession
+		r.sessions[sID] = session
 	}
 }
 
-func (r *registry) remove(gsession *gsession) {
+func (r *registry) remove(session *session) {
 	r.command <- func() {
-		sID := gsession.s.ID()
+		sID := session.id
 		r.sessionids.Remove(sID)
-		delete(r.gsessions, sID)
-		for channelName := range gsession.subbed.Iter() {
+		delete(r.sessions, sID)
+		for channelName := range session.subbed.Iter() {
 			r.channels[channelName.(string)].Remove(sID)
 		}
 	}
 }
 
-func (r *registry) send(gsession *gsession, payload string) {
+func (r *registry) send(session *session, payload string) {
 	r.command <- func() {
-		gsession.s.Send(payload)
+		session.conn.trans.send(payload)
 	}
 }

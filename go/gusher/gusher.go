@@ -35,24 +35,24 @@ func (h *handler) API() http.Handler {
 	})
 }
 
-func (h *handler) handler(session sockjs.Session) {
+func (h *handler) handler(transport transport) {
 	log.Println("client connected")
 	toGush := make(chan string)
 	toSock := make(chan string)
-	gsession := newSession(session, toGush, toSock)
-	h.registry.add(gsession)
-	h.registry.send(gsession, buildMessageConnectionEstablished(gsession.s.ID()))
-	go h.listen(gsession)
+	session := newSession(transport, toGush, toSock)
+	h.registry.add(session)
+	h.registry.send(session, buildMessageConnectionEstablished(session.conn.trans.id()))
+	go h.listen(session)
 }
 
-func (h *handler) teardown(gsession *gsession) {
+func (h *handler) teardown(session *session) {
 	log.Println("client disconnected")
-	h.registry.remove(gsession)
+	h.registry.remove(session)
 }
 
-func (h *handler) listen(gsession *gsession) {
+func (h *handler) listen(session *session) {
 	for {
-		if raw, ok := <-gsession.toGush; ok {
+		if raw, ok := <-session.conn.toGush; ok {
 			log.Println("msg rec'd: " + raw)
 
 			msg, err := MessageUnmarshalJSON([]byte(raw))
@@ -62,22 +62,22 @@ func (h *handler) listen(gsession *gsession) {
 				break
 			}
 
-			h.handleMessage(msg, gsession)
+			h.handleMessage(msg, session)
 		} else {
 			break
 		}
 	}
-	h.teardown(gsession)
+	h.teardown(session)
 }
 
-func (h *handler) handleMessage(msg message, gsession *gsession) {
+func (h *handler) handleMessage(msg message, session *session) {
 	switch msg := msg.(type) {
 	case messageSubscribe:
 		log.Println("subscribed to " + msg.Channel)
-		h.registry.subscribe(msg, gsession)
+		h.registry.subscribe(msg, session)
 	case messageUnsubscribe:
 		log.Println("unsubscribed to " + msg.Channel)
-		h.registry.unsubscribe(msg, gsession)
+		h.registry.unsubscribe(msg, session)
 	default:
 		log.Fatal("I give up")
 	}
