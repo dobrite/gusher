@@ -28,9 +28,10 @@
   },
   "scripts": {
     "start": "STATIC_ROOT=./public watchify -o public/javascripts/app.js -v -d .",
-    "build": "STATIC_ROOT=./public NODE_ENV=production browserify . | uglifyjs -cm > public/javascripts/app.min.js",
+    "buildold": "STATIC_ROOT=./public NODE_ENV=production browserify . | uglifyjs -cm > public/javascripts/app.min.js",
     "collect-static": "collect-static . ./public",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "browserify": "browserify src/javascripts/gusher.js --standalone Gusher > public/javascripts/app.js"
   },
   "author": "Dave O",
   "license": "MIT",
