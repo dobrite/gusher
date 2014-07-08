@@ -7,8 +7,13 @@ import (
 	"os"
 )
 
+func setupLogger() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+}
+
 func main() {
-	gmux := gusher.NewServeMux("/gusher")
+	setupLogger()
+	gmux := gusher.NewServeMux("/app", "tester")
 	gmux.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	gmux.HandleFunc("/", IndexHandler)
 

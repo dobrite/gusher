@@ -6,8 +6,8 @@ import (
 )
 
 type post struct {
-	Channel string `json:"channel"`
 	Event   string `json:"event"`
+	Channel string `json:"channel"`
 	Data    string `json:"data"`
 }
 
@@ -17,8 +17,8 @@ type message interface {
 
 type messageEvent struct {
 	Event   string          `json:"event"`
-	Channel string          `json:"channel"`
-	Data    json.RawMessage `json:"data,string"`
+	Channel string          `json:"channel,omitempty"`
+	Data    json.RawMessage `json:"data"`
 }
 
 // client -> gusher
@@ -39,8 +39,19 @@ type messageError struct {
 	Code    uint16 `json:"code"`
 }
 
+type messagePing struct {
+}
+
 func buildMessageConnectionEstablished(id string) string {
-	return fmt.Sprintf(`{"event": "gusher:connection_established", "data": "{\"socket_id\":\"%s\", \"activity_timeout\": 120}" }`, id)
+	return fmt.Sprintf(`{"event": "pusher:connection_established", "data": "{\"socket_id\":\"%s\", \"activity_timeout\": 120}"}`, id)
+}
+
+func buildMessageSubscriptionSucceeded(channelName string) string {
+	return fmt.Sprintf(`{"event": "pusher_internal:subscription_succeeded", "data": {}, "channel": "%s"}`, channelName)
+}
+
+func buildMessagePong() string {
+	return `{"event": "pusher:pong", "data":{}}`
 }
 
 func MessageUnmarshalJSON(b []byte) (msg message, err error) {
@@ -50,14 +61,18 @@ func MessageUnmarshalJSON(b []byte) (msg message, err error) {
 		return
 	}
 	switch event.Event {
-	case "gusher:subscribe":
+	case "pusher:subscribe":
 		var msgSub messageSubscribe
 		err = json.Unmarshal(event.Data, &msgSub)
 		msg = msgSub
-	case "gusher:unsubscribe":
+	case "pusher:unsubscribe":
 		var msgUnsub messageUnsubscribe
 		err = json.Unmarshal(event.Data, &msgUnsub)
 		msg = msgUnsub
+	case "pusher:ping":
+		var msgPing messagePing
+		err = json.Unmarshal(event.Data, &msgPing)
+		msg = msgPing
 	default:
 		err = fmt.Errorf("%s is not a recognized event", event.Event)
 	}

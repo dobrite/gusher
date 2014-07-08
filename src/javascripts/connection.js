@@ -20,7 +20,7 @@ var onmessage = function (data) {
 
 var Connection = function (bus) {
   this.bus = bus;
-  this.connection = new SockJS(config.fqd + "/gusher/");
+  this.connection = new SockJS(config.fqd + "/pusher/");
   this.connection.onopen    = onopen.bind(this);
   this.connection.onclose   = onclose.bind(this);
   this.connection.onmessage = onmessage.bind(this);

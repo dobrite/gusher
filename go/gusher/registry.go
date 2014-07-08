@@ -64,6 +64,7 @@ func (r *registry) publish(channelName string, payload string) {
 	r.command <- func() {
 		c := r.channels[channelName].Iter()
 		for sID := range c {
+			// whole server can be blocked by a slow client
 			r.sessions[sID.(string)].conn.toConn <- payload
 		}
 	}
@@ -90,6 +91,6 @@ func (r *registry) remove(session *session) {
 
 func (r *registry) send(session *session, payload string) {
 	r.command <- func() {
-		session.conn.trans.send_(payload)
+		session.conn.toConn <- payload
 	}
 }

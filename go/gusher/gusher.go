@@ -2,6 +2,7 @@ package gusher
 
 import (
 	"encoding/json"
+	"github.com/nu7hatch/gouuid"
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
 	"log"
 	"net/http"
@@ -11,12 +12,12 @@ type handler struct {
 	*registry
 }
 
-func NewServeMux(prefix string) *http.ServeMux {
+func NewServeMux(prefix string, appName string) *http.ServeMux {
 	h := &handler{
 		registry: newRegistry(),
 	}
 	mux := http.NewServeMux()
-	mux.HandleFunc(prefix+"/websocket", h.websocket)
+	mux.HandleFunc(prefix+"/"+appName, h.websocket)
 	mux.Handle(prefix+"/", sockjs.NewHandler(prefix, sockjs.DefaultOptions, h.sockjs))
 	mux.Handle(prefix+"/api/", h.API())
 	return mux
@@ -30,17 +31,20 @@ func (h *handler) API() http.Handler {
 		channel := req.PostFormValue("channel")
 		event := req.PostFormValue("event")
 		data := req.PostFormValue("data")
-		m := post{channel, event, data}
+		m := post{
+			Event:   event,
+			Channel: channel,
+			Data:    data,
+		}
 		payload, _ := json.Marshal(m)
 		h.registry.publish(channel, string(payload))
 	})
 }
 
 func (h *handler) sockjs(session sockjs.Session) {
-	log.Println("client connected")
-	toGush := make(chan string)
-	toConn := make(chan string)
-	h.handle(newSockjsTransport(session, toConn, toGush))
+	//{"hostname":"sock34.pusher.com","websocket":false,"origins":["*:*"],"cookie_needed":false,"entropy":980616283,"server_heartbeat_interval":25000}
+	log.Println("sockjsssssss!")
+	h.handle(newSockjsTransport(session))
 }
 
 func (h *handler) websocket(w http.ResponseWriter, req *http.Request) {
@@ -54,37 +58,44 @@ func (h *handler) websocket(w http.ResponseWriter, req *http.Request) {
 		log.Println(err)
 		return
 	}
-	toGush := make(chan string)
-	toConn := make(chan string)
-	h.handle(newWebsocketTransport(ws, toConn, toGush))
+	h.handle(newWebsocketTransport(ws))
 }
 
 func (h *handler) handle(transport transport) {
-	session := newSession(transport)
+	toGush := make(chan string)
+	toConn := make(chan string)
+	u4, err := uuid.NewV4()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	id := u4.String()
+	log.Printf("client connected: %s", id)
+	session := newSession(id, transport, toConn, toGush)
 	h.registry.add(session)
 	h.registry.send(session, buildMessageConnectionEstablished(session.id))
 	go h.listen(session)
 }
 
 func (h *handler) teardown(session *session) {
-	log.Println("client disconnected")
+	log.Printf("client disconnected: %s", session.id)
 	h.registry.remove(session)
 }
 
 func (h *handler) listen(session *session) {
-	toGush := session.conn.trans.toGush_()
 	for {
-		if raw, ok := <-toGush; ok {
+		if raw, ok := <-session.conn.toGush; ok {
+			// first message from sockjs really is {"path": "app/tester..."}
 			log.Println("msg rec'd: " + raw)
 
 			msg, err := MessageUnmarshalJSON([]byte(raw))
 
 			if err != nil {
 				log.Println("error unmarshaling json: " + err.Error())
-				break
+				//break
+			} else {
+				h.handleMessage(msg, session)
 			}
-
-			h.handleMessage(msg, session)
 		} else {
 			break
 		}
@@ -97,9 +108,13 @@ func (h *handler) handleMessage(msg message, session *session) {
 	case messageSubscribe:
 		log.Println("subscribed to " + msg.Channel)
 		h.registry.subscribe(msg, session)
+		h.registry.send(session, buildMessageSubscriptionSucceeded(msg.Channel))
 	case messageUnsubscribe:
 		log.Println("unsubscribed to " + msg.Channel)
 		h.registry.unsubscribe(msg, session)
+	case messagePing:
+		log.Println("ping")
+		h.registry.send(session, buildMessagePong())
 	default:
 		log.Fatal("I give up")
 	}

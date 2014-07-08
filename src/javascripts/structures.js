@@ -2,7 +2,7 @@ var structures = {};
 
 structures.subscribe = function(channelName) {
   return {
-    "event": "gusher:subscribe",
+    "event": "pusher:subscribe",
     "data": JSON.stringify({ //JSON serialized String
       "channel": channelName,
       "auth": "",
@@ -13,7 +13,7 @@ structures.subscribe = function(channelName) {
 
 structures.unsubscribe = function(channelName) {
   return {
-    "event": "gusher:unsubscribe",
+    "event": "pusher:unsubscribe",
     "data": JSON.stringify({ //JSON serialized String
       "channel": channelName,
     })

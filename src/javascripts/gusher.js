@@ -3,7 +3,8 @@ var _            = require('lodash'),
     config       = require('./config'),
     Channel      = require('./channel'),
     Connection   = require('./connection'),
-    Bus          = require('./bus');
+    Bus          = require('./bus'),
+    API          = require('./utils');
 
 var subscribedChannels;
 
@@ -33,4 +34,7 @@ Gusher.prototype.disconnect = function () {
   //TODO actually unsubscribe from each channel
 };
 
-module.exports = Gusher;
+module.exports = {
+  gusher: Gusher,
+  api: API
+};
