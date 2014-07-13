@@ -17,7 +17,7 @@ var expectedFullAuth = "278d425bdf160c739803" + ":" + expectedFullDigest
 func TestSign(t *testing.T) {
 	hexdigest := sign(socketId + ":" + privateChannelName)
 	if hexdigest != expectedDigest {
-		t.Errorf("hexdigest did not match expected")
+		t.Errorf("hexdigest did not match expected digest")
 	}
 }
 
@@ -38,6 +38,6 @@ func TestAuth(t *testing.T) {
 func TestFullAuth(t *testing.T) {
 	auth := auth(socketId, presenceChannelName, userData)
 	if auth != expectedFullAuth {
-		t.Errorf("auth did not match expected auth")
+		t.Errorf("auth did not match expected full auth")
 	}
 }
