@@ -4,13 +4,15 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 )
 
 var key = "278d425bdf160c739803"
 var secret = "7ad3773142a6692b25b8"
 
-func auth(socketId string, channelName string) string {
-	return key + ":" + sign(socketId+":"+channelName)
+func auth(data ...string) string {
+	joined := strings.Join(data, ":")
+	return key + ":" + sign(joined)
 }
 
 func sign(data string) string {
