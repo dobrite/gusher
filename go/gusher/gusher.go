@@ -84,7 +84,7 @@ func (h *handler) teardown(session *session) {
 
 func (h *handler) listen(session *session) {
 	for {
-		if raw, ok := <-session.conn.toGush; ok {
+		if raw, ok := <-session.toGush; ok {
 			// first message from sockjs really is {"path": "app/tester..."}
 			log.Println("msg rec'd: " + raw)
 

@@ -5,7 +5,7 @@ import (
 )
 
 type session struct {
-	conn   *connection
+	*connection
 	subbed mapset.Set
 	id     string
 }
@@ -18,14 +18,14 @@ func newSession(id string, transport transport, toConn chan string, toGush chan 
 	}
 
 	sess := &session{
-		conn:   conn,
-		subbed: mapset.NewThreadUnsafeSet(),
-		id:     id,
+		conn,
+		mapset.NewThreadUnsafeSet(),
+		id,
 	}
 
 	// prob put this in connection
 	// and create newConnection factory function
-	sess.conn.tomb.Go(sess.conn.sender)
-	sess.conn.tomb.Go(sess.conn.receiver)
+	sess.tomb.Go(sess.sender)
+	sess.tomb.Go(sess.receiver)
 	return sess
 }
