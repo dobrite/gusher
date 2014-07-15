@@ -12,11 +12,7 @@ type sessionMock struct {
 	sTapError, rTapError chan error
 }
 
-func (s sessionMock) ID() string {
-	return "123"
-}
-
-func (s sessionMock) Recv() (string, error) {
+func (s sessionMock) recv() (string, error) {
 	select {
 	case err := <-s.rTapError:
 		return "", err
@@ -25,7 +21,7 @@ func (s sessionMock) Recv() (string, error) {
 	}
 }
 
-func (s sessionMock) Send(str string) error {
+func (s sessionMock) send(str string) error {
 	s.sTap <- str
 	select {
 	case err := <-s.sTapError:
@@ -35,14 +31,14 @@ func (s sessionMock) Send(str string) error {
 	}
 }
 
-func (s sessionMock) Close(status uint32, reason string) error {
-	return nil
+func (s sessionMock) close() {
+	return
 }
 
 var _ = Describe("Session", func() {
 
 	var (
-		gs                         *gsession
+		gs                         *session
 		sTap, rTap, toSock, toGush chan string
 		sTapError, rTapError       chan error
 	)
@@ -60,7 +56,7 @@ var _ = Describe("Session", func() {
 		}
 		toGush = make(chan string)
 		toSock = make(chan string)
-		gs = newSession(sm, toGush, toSock)
+		gs = newSession("test", sm, toGush, toSock)
 	})
 
 	Describe("sender", func() {
@@ -72,7 +68,7 @@ var _ = Describe("Session", func() {
 			err := errors.New("send err")
 			sTapError <- err
 			toSock <- "YO!"
-			Eventually(gs.t.Err()).Should(Equal(err))
+			Eventually(gs.tomb.Err()).Should(Equal(err))
 		})
 	})
 
@@ -84,7 +80,7 @@ var _ = Describe("Session", func() {
 		It("returns error when Recv fails", func() {
 			err := errors.New("recv err")
 			rTapError <- err
-			Eventually(gs.t.Err()).Should(Equal(err))
+			Eventually(gs.tomb.Err()).Should(Equal(err))
 		})
 	})
 

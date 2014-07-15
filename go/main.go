@@ -11,11 +11,16 @@ func setupLogger() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 }
 
-func main() {
-	setupLogger()
+func getMux() *http.ServeMux {
 	gmux := gusher.NewServeMux("/app", "tester")
 	gmux.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("./public"))))
 	gmux.HandleFunc("/", IndexHandler)
+	return gmux
+}
+
+func main() {
+	setupLogger()
+	gmux := getMux()
 
 	port := os.Getenv("PORT")
 	if port == "" {

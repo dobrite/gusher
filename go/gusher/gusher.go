@@ -6,6 +6,7 @@ import (
 	"gopkg.in/igm/sockjs-go.v2/sockjs"
 	"log"
 	"net/http"
+	"strings"
 )
 
 type handler struct {
@@ -20,12 +21,14 @@ func NewServeMux(prefix string, appName string) *http.ServeMux {
 	mux.HandleFunc(prefix+"/"+appName, h.websocket)
 	mux.Handle(prefix+"/", sockjs.NewHandler(prefix, sockjs.DefaultOptions, h.sockjs))
 	mux.Handle(prefix+"/api/", h.API())
+	mux.Handle("/pusher/auth", h.auth())
 	return mux
 }
 
 func (h *handler) API() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if req.Method != "POST" {
+			w.WriteHeader(405)
 			return
 		}
 		channel := req.PostFormValue("channel")
@@ -107,8 +110,19 @@ func (h *handler) handleMessage(msg message, session *session) {
 	switch msg := msg.(type) {
 	case messageSubscribe:
 		log.Println("subscribed to " + msg.Channel)
-		h.registry.subscribe(msg, session)
-		h.registry.send(session, buildMessageSubscriptionSucceeded(msg.Channel))
+		if strings.HasPrefix(msg.Channel, "private-") || strings.HasPrefix(msg.Channel, "presence-") {
+			//set authTransport to 'ajax' (default)
+			//POST to /pusher/auth w/ socket_id and channel_name
+			//set authTransport to 'jsonp', also set authEndpoint (default to /pusher/auth)
+			//JSONP to /pusher/auth w/ socket_id, channel_name and callback
+			//render :text => params[:callback] + "(" + auth.to_json + ")", :content_type => 'application/javascript'
+			//return if authorized application/json
+			//{"auth":"278d425bdf160c739803:afaed3695da2ffd16931f457e338e6c9f2921fa133ce7dac49f529792be6304c","channel_data":"{\"user_id\":10,\"user_info\":{\"name\":\"Mr. Pusher\"}}"}
+			//otherwise 403 Forbidden plain text
+		} else {
+			h.registry.subscribe(msg, session)
+			h.registry.send(session, buildMessageSubscriptionSucceeded(msg.Channel))
+		}
 	case messageUnsubscribe:
 		log.Println("unsubscribed to " + msg.Channel)
 		h.registry.unsubscribe(msg, session)
