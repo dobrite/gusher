@@ -1,6 +1,7 @@
 package gusher
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -10,9 +11,14 @@ func (h *handler) auth() http.Handler {
 			w.WriteHeader(405)
 			return
 		}
-		_ = req.PostFormValue("callback")
+		callback := req.PostFormValue("callback")
 		_ = req.PostFormValue("socket_id")
 		_ = req.PostFormValue("channel_name")
+		if callback != "" {
+			log.Println("JSONP")
+		} else {
+			log.Println("not JSONP")
+		}
 		//set authTransport to 'ajax' (default)
 		//POST to /pusher/auth w/ socket_id and channel_name
 		//set authTransport to 'jsonp', also set authEndpoint (default to /pusher/auth)
