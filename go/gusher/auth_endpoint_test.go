@@ -36,7 +36,7 @@ func TestAuthEndpointJSONP(t *testing.T) {
 	data := url.Values{}
 	data.Set("callback", "func")
 	data.Set("socket_id", "1234.1234")
-	data.Set("channel_name", "tester")
+	data.Set("channel_name", "private-foobar")
 	encoded := data.Encode()
 	log.Println(encoded)
 
@@ -46,9 +46,9 @@ func TestAuthEndpointJSONP(t *testing.T) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	NewServeMux("app", "tester").ServeHTTP(resp, req)
-	if _, err := ioutil.ReadAll(resp.Body); err != nil {
+	if body, err := ioutil.ReadAll(resp.Body); err != nil {
 		t.Fail()
 	} else {
-		log.Println(resp.Body)
+		log.Println(string(body))
 	}
 }

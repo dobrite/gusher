@@ -1,6 +1,7 @@
 package gusher
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -12,10 +13,14 @@ func (h *handler) auth() http.Handler {
 			return
 		}
 		callback := req.PostFormValue("callback")
-		_ = req.PostFormValue("socket_id")
-		_ = req.PostFormValue("channel_name")
+		socketId := req.PostFormValue("socket_id")
+		channelName := req.PostFormValue("channel_name")
 		if callback != "" {
-			log.Println("JSONP")
+			authJSON := auth(socketId, channelName)
+			payload := fmt.Sprintf("%s({\"auth\":\"%s\"})", callback, authJSON)
+			w.Header().Set("Content-Type", "application/javascript")
+			log.Println(payload)
+			fmt.Fprintf(w, payload)
 		} else {
 			log.Println("not JSONP")
 		}
