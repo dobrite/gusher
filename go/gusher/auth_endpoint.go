@@ -2,7 +2,6 @@ package gusher
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -15,15 +14,19 @@ func (h *handler) auth() http.Handler {
 		callback := req.PostFormValue("callback")
 		socketId := req.PostFormValue("socket_id")
 		channelName := req.PostFormValue("channel_name")
+
+		authJSON := auth(socketId, channelName)
+
+		header := "application/json"
+		payload := fmt.Sprintf("{\"auth\":\"%s\"}", authJSON)
+
 		if callback != "" {
-			authJSON := auth(socketId, channelName)
-			payload := fmt.Sprintf("%s({\"auth\":\"%s\"})", callback, authJSON)
-			w.Header().Set("Content-Type", "application/javascript")
-			log.Println(payload)
-			fmt.Fprintf(w, payload)
-		} else {
-			log.Println("not JSONP")
+			header = "application/javascript"
+			payload = fmt.Sprintf("%s(%s)", callback, payload)
 		}
+
+		w.Header().Set("Content-Type", header)
+		fmt.Fprintf(w, payload)
 		//set authTransport to 'ajax' (default)
 		//POST to /pusher/auth w/ socket_id and channel_name
 		//set authTransport to 'jsonp', also set authEndpoint (default to /pusher/auth)
