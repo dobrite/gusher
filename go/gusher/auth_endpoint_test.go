@@ -37,8 +37,8 @@ func TestAuthEndpointJSONP(t *testing.T) {
 	data.Set("callback", "func")
 	data.Set("socket_id", "1234.1234")
 	data.Set("channel_name", "private-foobar")
+	data.Set("channel_data", "yo")
 	encoded := data.Encode()
-	log.Println(encoded)
 
 	postBody := bytes.NewBufferString(encoded)
 
