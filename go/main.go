@@ -27,8 +27,12 @@ func main() {
 		port = "3000"
 	}
 
+	keyFile := "server.key"
+	certFile := "server.crt"
+
 	log.Println("server started on port " + port)
-	log.Fatal(http.ListenAndServe(":"+port, gmux))
+	//log.Fatal(http.ListenAndServe(":"+port, gmux))
+	log.Fatal(http.ListenAndServeTLS(":"+port, certFile, keyFile, gmux))
 }
 
 func IndexHandler(w http.ResponseWriter, req *http.Request) {
