@@ -41,3 +41,4 @@ tags
 .env
 *.pem
 *.org
+server.*
