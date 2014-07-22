@@ -2,31 +2,42 @@ package gusher
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 )
 
 func (h *handler) auth() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		if req.Method != "POST" {
+		if req.Method != "POST" && req.Method != "GET" {
 			w.WriteHeader(405)
 			return
 		}
 
-		callback := req.PostFormValue("callback")
-		socketId := req.PostFormValue("socket_id")
-		channelName := req.PostFormValue("channel_name")
-		channelData := req.PostFormValue("channel_data")
-
+		socketId := ""
+		callback := ""
+		channelName := ""
+		channelData := ""
 		authJSON := ""
 		payload := ""
 
-		if channelData != "" {
+		if req.Method == "POST" {
+			socketId = req.PostFormValue("socket_id")
+			channelName = req.PostFormValue("channel_name")
+			channelData = req.PostFormValue("channel_data")
+		}
+
+		if req.Method == "GET" {
+			callback = req.FormValue("callback")
+			socketId = req.FormValue("socket_id")
+			channelName = req.FormValue("channel_name")
+			channelData = req.FormValue("channel_data")
+		}
+
+		if channelData == "" {
 			authJSON = auth(socketId, channelName)
-			payload = fmt.Sprintf("{\"auth\":\"%s\", \"channel_data\":\"%s\"}", authJSON, channelData)
+			payload = fmt.Sprintf("{\"auth\":\"%s\"}", authJSON)
 		} else {
 			authJSON = auth(socketId, channelName, channelData)
-			payload = fmt.Sprintf("{\"auth\":\"%s\"}", authJSON)
+			payload = fmt.Sprintf("{\"auth\":\"%s\", \"channel_data\":\"%s\"}", authJSON, channelData)
 		}
 
 		header := "application/json"
@@ -37,7 +48,6 @@ func (h *handler) auth() http.Handler {
 		}
 
 		w.Header().Set("Content-Type", header)
-		log.Println(payload)
 		fmt.Fprintf(w, payload)
 		//set authTransport to 'ajax' (default)
 		//POST to /pusher/auth w/ socket_id and channel_name
