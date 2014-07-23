@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/dobrite/gusher/go/gusher"
 	"log"
 	"net/http"
@@ -18,9 +19,39 @@ func getMux() *http.ServeMux {
 	return gmux
 }
 
+type sslFlag struct {
+	val string
+}
+
+func (s *sslFlag) String() string {
+	return s.val
+}
+
+func (s *sslFlag) Set(val string) error {
+	s.val = val
+	return nil
+}
+
+func (s *sslFlag) IsBoolFlag() bool {
+	return true
+}
+
+func setupFlags() {
+}
+
 func main() {
 	setupLogger()
+	setupFlags()
+
 	gmux := getMux()
+
+	ssl := &sslFlag{}
+
+	flag.Var(ssl, "ssl", "enable ssl")
+
+	flag.Parse()
+
+	log.Println(ssl)
 
 	port := os.Getenv("PORT")
 	if port == "" {
