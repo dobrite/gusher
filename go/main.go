@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 )
 
 func setupLogger() {
@@ -19,51 +20,32 @@ func getMux() *http.ServeMux {
 	return gmux
 }
 
-type sslFlag struct {
-	val string
-}
-
-func (s *sslFlag) String() string {
-	return s.val
-}
-
-func (s *sslFlag) Set(val string) error {
-	s.val = val
-	return nil
-}
-
-func (s *sslFlag) IsBoolFlag() bool {
-	return true
-}
-
-func setupFlags() {
-}
+var sslFlag = flag.Bool("ssl", false, "enable ssl")
+var portFlag = flag.Int("port", 3000, "port")
 
 func main() {
 	setupLogger()
-	setupFlags()
 
 	gmux := getMux()
 
-	ssl := &sslFlag{}
-
-	flag.Var(ssl, "ssl", "enable ssl")
-
 	flag.Parse()
 
-	log.Println(ssl)
+	port, err := strconv.Atoi(os.Getenv("PORT"))
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "3000"
+	if err != nil {
+		port = *portFlag
 	}
 
 	keyFile := "server.key"
 	certFile := "server.crt"
 
-	log.Println("server started on port " + port)
-	//log.Fatal(http.ListenAndServe(":"+port, gmux))
-	log.Fatal(http.ListenAndServeTLS(":"+port, certFile, keyFile, gmux))
+	log.Printf("server starting on port %d", port)
+
+	if true {
+		log.Fatal(http.ListenAndServeTLS(":"+strconv.Itoa(port), certFile, keyFile, gmux))
+	} else {
+		log.Fatal(http.ListenAndServe(":"+strconv.Itoa(port), gmux))
+	}
 }
 
 func IndexHandler(w http.ResponseWriter, req *http.Request) {
