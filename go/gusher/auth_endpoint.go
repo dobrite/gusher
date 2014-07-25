@@ -12,12 +12,12 @@ func (h *handler) auth() http.Handler {
 			return
 		}
 
-		socketId := ""
-		callback := ""
-		channelName := ""
-		channelData := ""
-		authJSON := ""
-		payload := ""
+		var socketId string
+		var callback string
+		var channelName string
+		var channelData string
+		var authJSON string
+		var payload string
 
 		if req.Method == "POST" {
 			socketId = req.PostFormValue("socket_id")
