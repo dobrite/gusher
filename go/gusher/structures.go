@@ -47,7 +47,21 @@ func buildMessageConnectionEstablished(id string) string {
 }
 
 func buildMessageSubscriptionSucceeded(channelName string) string {
-	return fmt.Sprintf(`{"event": "pusher_internal:subscription_succeeded", "data": {}, "channel": "%s"}`, channelName)
+	return fmt.Sprintf(`{"event": "pusher_internal:subscription_succeeded", "channel": "%s", "data": {}}`, channelName)
+}
+
+func buildMessagePresenceSubscriptionSucceeded(channelName string, ids []string, hash string, count int) string {
+	// TODO hash is likely a JSON object
+	return fmt.Sprintf(`{"event": "pusher_internal:subscription_succeeded", "channel": "%s", "data": {"presence": {"ids": %s, "hash": %s, "count": , %s}}}`, channelName, ids, hash, count)
+}
+
+func buildMessagePresenceMemberAdded(channelName string, userId string, userInfo string) string {
+	// TODO userInfo likely a JSON object
+	return fmt.Sprintf(`{"event": "pusher_internal:member_added", "channel": "%s", "data": {"user_id": "%s", "user_info": %s, }}`, channelName, userId, userInfo)
+}
+
+func buildMessagePresenceMemberRemoved(channelName string, userId string) string {
+	return fmt.Sprintf(`{"event": "pusher_internal:member_added", "channel": "%s", "data": {"user_id": "%s"}}`, channelName, userId)
 }
 
 func buildMessagePong() string {
