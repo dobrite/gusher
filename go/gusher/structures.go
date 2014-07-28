@@ -43,6 +43,7 @@ type messagePing struct {
 }
 
 func buildMessageConnectionEstablished(id string) string {
+	// TODO make activity_timeout come from config
 	return fmt.Sprintf(`{"event": "pusher:connection_established", "data": "{\"socket_id\":\"%s\", \"activity_timeout\": 120}"}`, id)
 }
 
