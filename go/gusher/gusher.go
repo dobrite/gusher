@@ -45,13 +45,12 @@ func (h *handler) API() http.Handler {
 }
 
 func (h *handler) sockjs(session sockjs.Session) {
-	//{"hostname":"sock34.pusher.com","websocket":false,"origins":["*:*"],"cookie_needed":false,"entropy":980616283,"server_heartbeat_interval":25000}
-	log.Println("sockjsssssss!")
+	log.Println("sockjs connected")
 	h.handle(newSockjsTransport(session))
 }
 
 func (h *handler) websocket(w http.ResponseWriter, req *http.Request) {
-	log.Println("websocketttttt!")
+	log.Println("websocket connected")
 	if req.Method != "GET" {
 		http.Error(w, "Method not allowed", 405)
 		return
