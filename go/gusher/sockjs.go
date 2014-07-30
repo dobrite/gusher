@@ -16,7 +16,7 @@ func newSockjsTransport(session sockjs.Session) transport {
 }
 
 func (t *sockjsTransport) close() {
-	t.sock.Close(1, "arghhhh") //do something better than this
+	t.sock.Close(1, "")
 }
 
 func (t *sockjsTransport) send(msg string) error {
